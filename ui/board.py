@@ -25,7 +25,7 @@ class Board:
                 self.white_kings += 1
             else:
                 self.red_kings += 1 
-
+    
     def get_piece(self, row, col):
         return self.board[row][col]
 
@@ -34,9 +34,9 @@ class Board:
             self.board.append([])
             for col in range(COLS):
                 if col % 2 == ((row +  1) % 2):
-                    if row < 3:
+                    if row < 1: #original = 3
                         self.board[row].append(Piece(row, col, WHITE))
-                    elif row > 4:
+                    elif row > 2: #original = 4
                         self.board[row].append(Piece(row, col, RED))
                     else:
                         self.board[row].append(0)
