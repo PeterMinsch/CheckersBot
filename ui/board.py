@@ -35,9 +35,9 @@ class Board:
             for col in range(COLS):
                 if col % 2 == ((row +  1) % 2):
                     if row < 1: #original = 3
-                        self.board[row].append(Piece(row, col, WHITE))
+                        self.board[row].append(Piece(2, 1, WHITE)) #self.board[row].append(Piece(row, col, RED)) 
                     elif row > 2: #original = 4
-                        self.board[row].append(Piece(row, col, RED))
+                        self.board[row].append(Piece(3, 2, RED)) #self.board[row].append(Piece(row, col, RED)) 
                     else:
                         self.board[row].append(0)
                 else:
