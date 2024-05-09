@@ -2,6 +2,8 @@
 import pygame
 from ui.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED
 from ui.game import Game
+from ui.board import Board
+from chessAgent.valueIteration import Agent
 
 FPS = 60
 
@@ -15,10 +17,14 @@ def get_row_col_from_mouse(pos):
     return row, col
 
 def main():
+    
+    
     run = True
     clock = pygame.time.Clock()
     game = Game(WIN)
-
+    #chessAgent = Agent()
+    #p = chessAgent.calculateProbabilityMatrix(game)
+    # print(f"The p matrix is {p}")
     while run:
         clock.tick(FPS)
 
