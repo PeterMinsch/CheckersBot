@@ -17,18 +17,17 @@ def get_row_col_from_mouse(pos):
     return row, col
 
 def main():
-    
-    
     run = True
     clock = pygame.time.Clock()
     game = Game(WIN)
-    #chessAgent = Agent()
-    #p = chessAgent.calculateProbabilityMatrix(game)
-    # print(f"The p matrix is {p}")
+    chessAgent = Agent()
+    
+    new_V, policy= chessAgent.valueIteration(chessAgent.V, chessAgent.P, chessAgent.nA, chessAgent.nS)
+    print(f"policy is {policy}")
     while run:
         clock.tick(FPS)
 
-        if game.winner() != None:
+        if game.winner() is not None:
             print(game.winner())
             run = False
 
@@ -40,6 +39,8 @@ def main():
                 pos = pygame.mouse.get_pos()
                 row, col = get_row_col_from_mouse(pos)
                 game.select(row, col)
+
+        
 
         game.update()
     
