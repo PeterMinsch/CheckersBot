@@ -1,5 +1,5 @@
+from ui.constants import ROWS, COLS, RED, WHITE
 from ui.board import Board
-from ui.constants import ROWS, COLS
 from ui.piece import Piece
 import numpy as np
 
@@ -11,115 +11,79 @@ class State:
         self.terminal = terminal
 
 class Agent:
-
     def __init__(self):
         self.board = Board()
-        self.nA = 2
-        self.nS = len(self.findAgentPieces())
-        self.V = [0] * self.nS
+        self.agent_pieces = self.findAgentPieces()  # Store the list of agent pieces
+        self.nS = len(self.agent_pieces)  # Number of agent pieces
+        self.ACTION_SPACE = self.createActionSpace()
+        self.nA = len(self.ACTION_SPACE)
+        self.V = np.zeros(self.nS)
         self.P = self.calculateProbabilityMatrix()
 
-    def valueIteration(self, V, P, nA, nS):
-        gamma = 0.9
-        new_V, policy = [0] * nS, [0] * nS
+    def valueIteration(self, gamma=0.9, max_iterations=100):
+        for _ in range(max_iterations):
+            delta = 0
+            for s in range(self.nS):
+                v = self.V[s]
+                new_v = np.zeros(self.nA)
+                for a in range(self.nA):
+                    transitions = self.P[s]
+                    for prob, next_s_index, reward, terminal in transitions:
+                        new_v[a] += prob * (reward + gamma * self.V[next_s_index])
+                self.V[s] = max(new_v)
+                delta = max(delta, abs(v - self.V[s]))
+            if delta < 1e-6:
+                break
 
-        for s in range(nS):
-            new_v = [0] * nA
-            for a in range(nA):
-                if P[s][a] is None:
-                    new_v[a] = -999  # Put -999 when P[s][a] is None
-                    continue
-                
-                for transition in P[s][a]:
-                    prob, next_s, reward, terminal = transition
-                    new_v[a] += prob * (reward + gamma * V[next_s])
-            new_V[s] = max(new_v)
-            policy[s] = np.argmax(new_V)
-        return new_V, policy
-
-    def findAgentPieces(self):
-        nP = []
-        for i in range(ROWS):
-            for j in range(COLS):
-                if self.board.get_piece(i, j):
-                    nP.append(self.board.get_piece(i, j))
-        return nP
-
-    def determineProbability(self, moves):
-        max_capture_count = 0
-        for move, captured_pieces in moves.items():
-            capture_count = len(captured_pieces)
-            max_capture_count = max(max_capture_count, capture_count)
-
-        best_moves = [0] * len(moves)
-        for i, move in enumerate(moves):
-            if len(moves[move]) == max_capture_count:
-                best_moves[i] = 1
-
-        return best_moves
-
-
-
+        return self.V, self.P
 
     def calculateProbabilityMatrix(self):
-        nP = self.findAgentPieces()
-        p = [[None for _ in range(COLS)] for _ in range(ROWS)]
-
-        for piece in nP:
+        P = [[] for _ in range(self.nS)]  # Initialize P with correct size
+        for agent_piece_index, piece in enumerate(self.agent_pieces):
+            transitions = []
             moves = self.board.get_valid_moves(piece)
-            probabilities = self.determineProbability(moves)
-            next_states = []
+            total_prob = len(moves)
+            for move, _ in moves.items():
+                if isinstance(move, tuple) and len(move) > 0:
+                    next_pos = move[0]  # Get the first position in the tuple
+                    if isinstance(next_pos, tuple) and len(next_pos) == 2:
+                        next_row, next_col = next_pos
+                        next_s_index = next_row * COLS + next_col
+                        reward = 1
+                        terminal = False
+                        prob = 1 / total_prob
+                        transitions.append((prob, next_s_index, reward, terminal))
+                    else:
+                        print("Invalid position in move:", next_pos)
+                elif isinstance(move, list) and len(move) > 0:
+                    for next_pos in move:
+                        if isinstance(next_pos, tuple) and len(next_pos) == 2:
+                            next_row, next_col = next_pos
+                            next_s_index = next_row * COLS + next_col
+                            reward = 1
+                            terminal = False
+                            prob = 1 / total_prob
+                            transitions.append((prob, next_s_index, reward, terminal))
+                        else:
+                            print("Invalid position in move:", next_pos)
+                elif not move:
+                    print("Empty move detected:", move)
+            if transitions:
+                P[agent_piece_index] = transitions
+        return P
 
-            for move, prob in zip(moves, probabilities):
-                next_state = move
-                reward = 1  # Assuming a constant reward for simplicity
-                terminal = False  # Assuming no terminal states for simplicity
-                next_states.append((next_state, prob, reward, terminal))
+    def findAgentPieces(self):
+        agent_pieces = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                piece = self.board.get_piece(row, col)
+                if piece is not None and piece != 0 and piece.color == WHITE:
+                    if self.board.get_valid_moves(piece):
+                        agent_pieces.append(piece)  # Append the piece to the list
+        return agent_pieces
 
-            # Populate P with the next states for each action (0 and 1 for example)
-            p[piece.row][piece.col] = next_states
-
-        return p
-
-    # def calculateProbabilityMatrix(self):
-    #     nP = self.findAgentPieces()
-    #     p = [[None for _ in range(COLS)] for _ in range(ROWS)]
-
-    #     for piece in nP:
-    #         moves = self.board.get_valid_moves(piece)
-    #         probabilities = self.determineProbability(moves)
-    #         reward = 1
-    #         next_states = []
-    #         for move, prob in zip(moves, probabilities):
-    #             next_state = move
-    #             terminal = False
-    #             next_states.append((next_state, prob, terminal))
-    #         p[piece.row][piece.col] = State(probability=None, reward=reward, next_states=next_states, terminal=False)
-
-    #     return p
-
-
-    # def calculateProbabilityMatrix(self):
-    #     nP = self.findAgentPieces() #retreiving our list of "states"
-    #     p = [[None for _ in range (COLS) for _ in range (ROWS)]]
-        
-    #     # probability = self.determineProbability(nP[0])
-    #     moves = self.board.get_valid_moves(nP[0]) #getting valid moves for our piece
-    #     probabilities = self.determineProbability(moves)
-    #     reward = 1
-    #     next_s = ()
-    #     terminal = False
-    #     for i in range(ROWS):
-    #         for j in range(COLS):
-    #             if self.board.get_piece(i, j): #if there is a piece
-    #                 nP.append(self.board.get_piece(i,j))
-                    
-    #                 p[i][j] = State(probability, reward, next_s(i + 1, j + 1), terminal)
-    
-    #     return p
-
-
-        
-
-    
-    
+    def createActionSpace(self):
+        action_space = {}
+        for i in range(self.nS):
+            action_space[i] = i  # Action index corresponds to state index
+        return action_space
