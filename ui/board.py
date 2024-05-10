@@ -34,10 +34,10 @@ class Board:
             self.board.append([])
             for col in range(COLS):
                 if col % 2 == ((row +  1) % 2):
-                    if row < 1: #original = 3
-                        self.board[row].append(Piece(2, 1, WHITE)) #self.board[row].append(Piece(row, col, RED)) 
-                    elif row > 2: #original = 4
-                        self.board[row].append(Piece(3, 2, RED)) #self.board[row].append(Piece(row, col, RED)) 
+                    if row < 3: #original = 3: new = 1
+                        self.board[row].append(Piece(row, col, WHITE)) #self.board[row].append(Piece(row, col, RED)) : self.board[row].append(Piece(2, 1, WHITE))
+                    elif row > 4: #original = 4: new = 2
+                        self.board[row].append(Piece(row, col, RED)) #self.board[row].append(Piece(row, col, RED)) : self.board[row].append(Piece(3, 2, RED)) 
                     else:
                         self.board[row].append(0)
                 else:
